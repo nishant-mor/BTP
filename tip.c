@@ -3,16 +3,16 @@
 
 
 double L(double x, double a, double b, double c, double alp) {
-	double ex = x*x*x - (a*b*c*x*x) + ((a*b+b*c+c*a)*x) - (a+b+c);
+	double ex = x*x*x - (a+b+c)*x*x + ((a*b+b*c+c*a)*x) - (a*b*c);
 	double res = (double)ex/alp;
-  	printf("x %lf , a %lf , b %lf, c %lf, alp %lf , L %lf \n", x , a, b , c , alp , res);
+  	//printf("x %lf , a %lf , b %lf, c %lf, alp %lf , L %lf \n", x , a, b , c , alp , res);
 	return res;
 }
 
 double del_L(double x, double a, double b, double c, double alp){
-	double ex = 3*x*x - (2*a*b*c*x) + (a*b+b*c+c*a);
+	double ex = 3*x*x - 2*(a+b+c)*x + (a*b+b*c+c*a);
 	double res = (double)ex/alp;
-	printf("DEL   x %lf , a %lf , b %lf, c %lf, alp %lf , L %lf \n", x , a, b , c , alp , res);
+	//printf("DEL   x %lf , a %lf , b %lf, c %lf, alp %lf , L %lf \n", x , a, b , c , alp , res);
 	return res;
 }
 
@@ -96,36 +96,8 @@ double del_poly_y(double x, double y, double x0, double x1, double x2, double x3
 	return P_x_y;
 }
 
-void multiplyMatrices(double firstMatrix[2][2], double secondMatrix[2][1], double mult[2][1], int rowFirst, int columnFirst, int rowSecond, int columnSecond)
-{
-	int i, j, k;
 
-	// Initializing elements of matrix mult to 0.
-	for(i = 0; i < rowFirst; ++i)
-	{
-		for(j = 0; j < columnSecond; ++j)
-		{
-			mult[i][j] = 0;
-		}
-	}
-
-	// Multiplying matrix firstMatrix and secondMatrix and storing in array mult.
-	for(i = 0; i < rowFirst; ++i)
-	{
-		for(j = 0; j < columnSecond; ++j)
-		{
-			for(k=0; k<columnFirst; ++k)
-			{
-				mult[i][j] += firstMatrix[i][k] * secondMatrix[k][j];
-			}
-		}
-	}
-
-	//return mult;
-}
-
-
-void display(double mult[][2], int rowFirst, int columnSecond)
+void display(double mult[2][2], int rowFirst, int columnSecond)
 {
 	int i, j;
 	printf("\nOutput Matrix:\n");
@@ -133,7 +105,7 @@ void display(double mult[][2], int rowFirst, int columnSecond)
 	{
 		for(j = 0; j < columnSecond; ++j)
 		{
-			printf("%lf  ", mult[i][j]);
+			printf("%0.20f  ", mult[i][j]);
 			if(j == columnSecond - 1)
 				printf("\n\n");
 		}
@@ -164,7 +136,7 @@ void display_inv(double mult[][2], int rowFirst, int columnSecond)
     {
         for(j = 0; j < columnSecond; ++j)
         {
-            printf("%lf  ", mult[i][j]);
+            printf("%0.20f  ", mult[i][j]);
             if(j == columnSecond - 1)
                 printf("\n\n");
         }
@@ -175,7 +147,7 @@ void display_inv(double mult[][2], int rowFirst, int columnSecond)
 int newton_raphson(double result[2], double x0, double x1, double x2, double x3, double y0, double y1, double y2, double y3, double f[4][4] , double g[4][4]){
 
 	int max_iterations = 100000 ; 
-	double TOL = 0.001; 
+	double TOL = 0.0000000001; 
 
 	double X0[2][1];
 	double X1[2][1];
@@ -193,6 +165,12 @@ int newton_raphson(double result[2], double x0, double x1, double x2, double x3,
 		J[1][1] = del_poly_y(X0[0][0] , X0[1][0] , x0 , x1 , x2 , x3 , y0 , y1 , y2 , y3 , g );	// at ( V xy[0] , xy[1])
 
 		double J_inv[2][2];
+
+		printf("\n");
+		printf("J: \n");
+		display(J , 2 , 2 );
+		printf("\n");
+
 		inv_2_2(J, J_inv);
 
 		double fun[2][1];
@@ -205,8 +183,19 @@ int newton_raphson(double result[2], double x0, double x1, double x2, double x3,
 
 		double res[2][1];
 
-		multiplyMatrices(J_inv , fun , res , 2 , 2 , 2 , 2);
-		printf("X1 : %f , %f       Res : %f ,  %f\n" , X1[0][0] , X1[1][0] , res[0][0] , res[1][0]);
+
+		// M=ultiply J_inv an fun;
+		res[0][0] = J_inv[0][0]*fun[0][0] + J_inv[0][1]*fun[1][0] ;
+		res[1][0] = J_inv[1][0]*fun[0][0] + J_inv[1][1]*fun[1][0]  ; 
+
+		printf("fun[0][0] : %0.20f  ,   fun[1][0] : %0.20f \n" , fun[0][0] , fun[1][0]);
+
+		printf("\n");
+		printf("J_inv: \n");
+		display(J_inv , 2 , 2 );
+		printf("\n");
+
+		printf("X1 : %0.20f , %0.20f       Res : %0.20f ,  %0.20f\n" , X1[0][0] , X1[1][0] , res[0][0] , res[1][0]);
 
 		X1[0][0] = X0[0][0] - res[0][0];
 		X1[1][0] = X0[1][0] - res[1][0];
@@ -214,6 +203,8 @@ int newton_raphson(double result[2], double x0, double x1, double x2, double x3,
 		if(fabs(X1[0][0] - X0[0][0]) < TOL && fabs(X1[1][0] - X0[1][0]) < TOL  ){
 			result[0] = X1[0][0];
 			result[1] = X1[1][0];
+			printf("Total Iterations: %d\n" , i);
+
 			return 1; 
 		}
 		else{
@@ -253,8 +244,8 @@ int main(){
 
 	int response =  newton_raphson(result , X[0] , X[1] , X[2] , X[3] , Y[0] ,Y[1] , Y[2] , Y[3] , U , V) ; 
 	if(response){
-		printf("x = %lf  ", result[0]);	
-		printf("y = %lf  ", result[1]);
+		printf("x = %0.30f  ", result[0]);	
+		printf("y = %0.30f  ", result[1]);
 	}
 
 	else{
